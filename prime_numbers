@@ -11,22 +11,22 @@ struct Suma {
     int howManyPrimes;
 };
 
-void findPrimeNbs(Suma *suma) {
+void findPrimeNbs(Suma* suma) {
     bool isPrime = true;
     suma->arr[0] = suma->primeNb;
     suma->primeNbArr[0] = suma->primeNb;
     int secondPrime;
     int diff = suma->number - suma->primeNb;
-    if (suma->primeNb >= diff) {
+    if (suma->primeNb > diff) {
         secondPrime = diff;
     }
     else {
-        secondPrime = suma->primeNb -1;
+        secondPrime = suma->primeNb - 1;
     }
     suma->howManyPrimes = 1;
-    for (int i = secondPrime; i >= smallestPrime; i--) 
+    for (int i = secondPrime; i >= smallestPrime; i--)
     {
-        for (int j = 2; j * j <= i; j++) 
+        for (int j = 2; j * j <= i; j++)
         {
             if (i % j == 0)
                 isPrime = false; //gdy znajdziemy dzielnik, to dana liczba nie jest pierwsza
@@ -40,40 +40,24 @@ void findPrimeNbs(Suma *suma) {
 }
 
 void coutArr(Suma* suma, int ilosc) {
-    cout << suma->number << "=";
     for (int i = 0; i < ilosc; i++) {
-        if (i == ilosc -1) 
+        if (i == ilosc - 1)
             cout << suma->arr[i] << '\n';
         else
-        cout << suma->arr[i] << "+";
+            cout << suma->arr[i] << "+";
     }
 }
 
-int findIndex(Suma* suma, int index) {
-    int number = suma->arr[index];
-    for (int i = 0; i <= index; i++) {
+int findIndex(Suma* suma, int number) {
+    for (int i = 0; i <= suma->number; i++) {
         if (suma->arr[i] == number)
             return i;
     }
-    return suma->arr[index];
-}
-
-int actualDiff(Suma* suma, int n) {
-    int zlicz =0;
-    for (int i = 1; i <= n; i++) {
-        zlicz += suma->arr[i];
-    }
-    return zlicz;
-}
-
-void powrotDoDwojek(Suma* suma, int n) {
-    for (int i = 2; i <= n; i++) {
-        suma->arr[i] = smallestPrime;
-    }
+    return suma->arr[0];
 }
 
 int findNextPrime(Suma* suma, int firstSmallest) {
-    for (int i = suma->howManyPrimes -1; i > 0; i--) {
+    for (int i = suma->howManyPrimes - 1; i > 0; i--) {
         if (suma->primeNbArr[i] == firstSmallest) {
             return suma->primeNbArr[i - 1];
         }
@@ -81,82 +65,82 @@ int findNextPrime(Suma* suma, int firstSmallest) {
     return 0;
 }
 
-
-int znajdzSume(Suma* suma) {
-    int diff = suma->number - suma->primeNb;
-    int index = suma->howManyPrimes -1;    //ostatni indeks wskazuje na njamniejsza liczbe pierwsza czyli 2 od tego zaczynamy
-    int ilosc;
-    suma->arr[0] = suma->primeNb;
-    //tworzymy pierwsze zapelnienenie tablicy czyli same 2 albo jedna 3 i same 2
-
-    if (diff % smallestPrime == 0) {
-        ilosc = diff / smallestPrime;
-        for (int i = 1; i <= ilosc; i++) {
-            suma->arr[i] = smallestPrime;
-        }
-        coutArr(suma, ilosc +1);
+void powrotDoDwojek(Suma* suma, int k, int n) {
+    for (int i = k; i <= n; i++) {
+        suma->arr[i] = smallestPrime;
     }
-    else {
-        suma->arr[1] = 3;
-        diff -= 3;
-        ilosc = diff / smallestPrime;
-        for (int i = 2; i <= ilosc+1; i++) {
-            suma->arr[i] = smallestPrime;
-        }
-        coutArr(suma, ilosc +2);
-    }
+}
 
-    //wypisujemy kolejne sumy   
-    int indexAdd = ilosc;
-    bool zmiana = true;
-    int ilosc_el = ilosc;
-    bool finish = false;
-    while (true)
+int findSum(Suma* suma) {
+    int numbers = 1; //ilosc liczb
+    const int diff = suma->number - suma->primeNb;
+    int actualDiff = diff;
+    int actualNb = 1;
+    bool isNotFinish = true;
+    for (int i = 1; i < suma->number / 2; i++) { //wyeplniamy talbice dwojkami bo ot najmniejsza liczba pierwsza
+        suma->arr[i] = smallestPrime;
+        numbers++;
+    }
+    while (isNotFinish)
     {
-        int firstSmallest = findIndex(suma, ilosc_el);      //find index of the first smallest element
-        int liczba = suma->arr[firstSmallest];
-        suma->arr[firstSmallest] = findNextPrime(suma, liczba);
-        diff = suma->number - suma->primeNb - actualDiff(suma, firstSmallest);
-        if (diff == 0) {
-            coutArr(suma, firstSmallest + 1);
-            ilosc_el = firstSmallest +1;
-            diff = -1;
-            zmiana = false;
-        }
-        if (diff < 0 && suma->arr[1] == suma->arr[ilosc_el - 1]) { //przechodzimy do kolejnej liczby
-            int firstNb = suma->arr[1];
-            suma->arr[1] = findNextPrime(suma, firstNb);
-            if (suma->arr[1] == suma->primeNbArr[0]) {
-                finish = true;
-            }          
-            powrotDoDwojek(suma, ilosc);
-            diff = suma->number - suma->primeNb - suma->arr[1];
-            firstSmallest = 2;
-        }
-        if (finish)
-            break;
-        if (diff < 0 && suma->arr[1] != suma->arr[ilosc_el - 1]) {
-            zmiana = false;
-        }
-        if (zmiana) {
-            for (int i = firstSmallest + 1; i < (suma->number - suma->primeNb); i++) {
-                if (diff - suma->arr[i] > 0) {
-                    diff -= suma->arr[i];
-                   // indexAdd = i;
+        for (int j = 1; j < numbers; j++)
+        {
+            if (actualDiff - suma->arr[j] > 0)
+            {
+                actualDiff -= suma->arr[j];
+                actualNb++;
+            }
+            else if (actualDiff - suma->arr[j] == 0)
+            {
+                actualNb++;
+                coutArr(suma, actualNb);
+                int smallestNb = suma->arr[actualNb - 1];
+                int index = findIndex(suma, smallestNb);      //find index of the first smallest element
+                if (index == 0) {
+                    isNotFinish = false;
                 }
-                else if (diff - suma->arr[i] == 0) { //poprawne wypelnienie tablicy              
-                    coutArr(suma, i + 1);
-                    ilosc_el = i;
-                    break;
+                powrotDoDwojek(suma, index + 1, actualNb + 1);
+                suma->arr[index] = findNextPrime(suma, smallestNb);
+                if (suma->arr[index] == 0) {
+                    isNotFinish = false;
                 }
-                else {
-                    break;
+                break;
+            }
+            else
+            {
+                int smallestNb = suma->arr[actualNb - 1];
+                int index = findIndex(suma, smallestNb);      //find index of the first smallest element
+                if (index == 0) {
+                    isNotFinish = false;
                 }
+                suma->arr[index] = findNextPrime(suma, smallestNb);
+                powrotDoDwojek(suma, index + 1, actualNb + 1);            
+                if (suma->arr[index] == 0) {
+                    isNotFinish = false;
+                }
+                break;
+
+
             }
         }
-        zmiana = true;
+        actualNb = 1;
+        actualDiff = diff;
     }
+
+
     return 0;
+}
+
+
+
+bool ifIsPrime(int liczba) {
+    if (liczba < 2)
+        return false;
+    for (int i = 2; i * i <= liczba; i++) {
+        if (liczba % i == 0)
+            return false; //gdy znajdziemy dzielnik, to dana liczba nie jest pierwsza
+    }
+    return true;
 }
 
 
@@ -164,16 +148,27 @@ int main()
 {
     Suma suma;
     int lineNb;
+    bool isPrime = true;
     cin >> lineNb;
     for (int i = 0; i < lineNb; i++) {
-        cin >> suma.number;  //wczytanie liczby
-        cin >> suma.primeNb; //wczytanie pierwszej liczby pierwszej
-        cout << "\n";
-        suma.arr = new int[suma.number / 2];
-        suma.primeNbArr = new int[suma.primeNb / 2];
-        findPrimeNbs(&suma);
-        znajdzSume(&suma);
+        cin >> suma.number >> suma.primeNb;
+        if (suma.number % 2 != 0 && suma.primeNb == smallestPrime) {
+            isPrime = false;
+        }
+        if (ifIsPrime(suma.primeNb) && isPrime == true) {
+            if (suma.number == suma.primeNb)
+                cout << suma.primeNb << '\n';
+            else {
+                suma.arr = (int*)malloc(sizeof(int) * suma.number);
+                suma.primeNbArr = (int*)malloc(sizeof(int) * suma.primeNb);
+                findPrimeNbs(&suma);
+                findSum(&suma);
+                free(suma.arr);
+                free(suma.primeNbArr);
+            }
+        }
+        isPrime = true;
+
     }
     return 0;
 }
-
