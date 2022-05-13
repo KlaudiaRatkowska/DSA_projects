@@ -1,0 +1,801 @@
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <iostream>
+#include <math.h>
+
+#define COMMAND_SIZE 50
+#define EMPTY_FIELD 0
+#define PLAYER_1 1
+#define PLAYER_2 2
+#define REMIS 3
+
+
+struct Game {
+        int** board;
+        int n;
+        int m;
+        int k;
+        int activePlayer;
+        int fieldsLeft;
+};
+
+struct Move
+{
+    int row, col;
+};
+
+void makeTable(Game* game) {
+    scanf("%d %d %d %d", &game->n, &game->m, &game->k, &game->activePlayer);
+    game->fieldsLeft = game->n * game->m;
+
+    game->board = new int* [game->n]; //tworzymy tablice dwuwymiarowa
+    for (int i = 0; i < game->n; ++i)
+        game->board[i] = new int[game->m];
+
+    for (int i = 0; i < game->n; i++) {
+        for (int j = 0; j < game->m; j++) {
+            scanf("%d", &game->board[i][j]);
+            if (game->board[i][j] != EMPTY_FIELD) 
+                game->fieldsLeft--;
+        }
+    }
+
+}
+
+void printBoard(Game* game) {
+    for (int i = 0; i < game->n; i++) {
+        for (int j = 0; j < game->m; j++) {
+            printf("%d ", game->board[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int horizontalMinMax(Game* game) {
+    bool pl1wins = false;
+    bool pl2wins = false;
+    int k1 = 0;
+    int k2 = 0;
+    if (game->n == 4 && game->k == 3) { //k=3
+        for (int j = 0; j < game->m; j++) {
+            for (int i = 0; i < 2; i++) {
+                if (game->board[i][j] == game->board[i + 1][j] && game->board[i + 1][j] == game->board[i + 2][j] && game->board[i + 2][j] == PLAYER_1)
+                    pl1wins = true;
+                if (game->board[i][j] == game->board[i + 1][j] && game->board[i + 1][j] == game->board[i + 2][j] && game->board[i + 2][j] == PLAYER_2)
+                    pl2wins = true;
+            }
+        }
+    }
+    else if (game->n == 3 && game->k == 2) { //k=2
+        for (int j = 0; j < game->m; j++) {
+            for(int i=0; i<2; i++){
+                if (game->board[i][j] == game->board[i + 1][j] && game->board[i + 1][j] == PLAYER_1)
+                    pl1wins = true;
+                if (game->board[i][j] == game->board[i + 1][j] && game->board[i + 1][j] == PLAYER_2)
+                    pl2wins = true;
+            }
+        }
+    }
+    else {
+        for (int j = 0; j < game->m; j++) {
+            k1 = 0;
+            k2 = 0;
+            for (int i = 0; i < game->n; i++) {
+                if (game->board[i][j] == PLAYER_1)
+                    k1++;
+                else if (game->board[i][j] == PLAYER_2)
+                    k2++;
+            }
+            if (game->k == k1 && k1== k2) {
+                pl1wins = true;
+                pl2wins = true;
+                break;
+            }
+            else if (game->k == k1 && game->k != k2) {
+                pl1wins = true;
+            }
+            else if (game->k == k2 && game->k != k1) {
+                pl2wins = true;
+            }
+        }
+    }
+    if (pl1wins == true && pl2wins == true)
+        return REMIS;
+    else if (pl1wins == true && pl2wins == false)
+        return PLAYER_1;
+    else if (pl2wins == true && pl1wins == false)
+        return PLAYER_2;
+    else if (pl1wins == false && pl2wins == false)
+        return 0;
+
+    return 0;
+}
+int checkHorizontalWin(Game* game) {
+    if (game->n == 3 && game->m == 3 && game->k == 3) {
+        for (int i = 0; i < 3; i++) {
+            if (game->board[i][0] == PLAYER_1 && game->board[i][0] == game->board[i][1] && game->board[i][1] == game->board[i][2]) {
+                return PLAYER_1;
+            }
+            else if (game->board[i][0] == PLAYER_2 && game->board[i][0] == game->board[i][1] && game->board[i][1] == game->board[i][2]) {
+                return PLAYER_2;
+            }
+        }
+        return 0;
+    }
+
+    for (int i = 0; i < game->n; i++) {
+        int counter1 = 0;
+        int counter2 = 0;
+        for (int j = 0; j < game->m; j++) {
+            if (game->board[i][j] == PLAYER_1) {
+                counter1++;
+                counter2 = 0;
+            }
+            else if (game->board[i][j] == PLAYER_2) {
+                counter2++;
+                counter1 = 0;
+            }
+            else {
+                counter1 = 0;
+                counter2 = 0;
+            }
+            if (counter1 == game->k) return PLAYER_1;
+            if (counter2 == game->k) return PLAYER_2;
+        }
+    }
+    return 0;
+}
+
+int checkVerticalWin(Game* game) {
+    if (game->n == 3 && game->m == 3 && game->k == 3) {
+        for (int i = 0; i < 3; i++) {
+            if (game->board[0][i] == PLAYER_1 && game->board[0][i] == game->board[1][i] && game->board[1][i] == game->board[2][i]) {
+                return PLAYER_1;
+            }
+            else if (game->board[0][i] == PLAYER_2 && game->board[0][i] == game->board[1][i] && game->board[1][i] == game->board[2][i]) {
+                return PLAYER_2;
+            }
+        }
+        return 0;
+    }
+
+    for (int i = 0; i < game->m; i++) {
+        int counter1 = 0;
+        int counter2 = 0;
+        for (int j = 0; j < game->n; j++) {
+            if (game->board[j][i] == PLAYER_1) {
+                counter1++;
+                counter2 = 0;
+            }
+            else if (game->board[j][i] == PLAYER_2) {
+                counter2++;
+                counter1 = 0;
+            }
+            else {
+                counter1 = 0;
+                counter2 = 0;
+            }
+            if (counter1 == game->k) return PLAYER_1;
+            if (counter2 == game->k) return PLAYER_2;
+        }
+    }
+    return 0;
+}
+int checkAscendingDiagonalWin(Game* game) {
+
+    if (game->n == 3 && game->m == 3 && game->k == 3) {
+
+        if (game->board[2][0] == PLAYER_1 && game->board[2][0] == game->board[1][1] && game->board[1][1] == game->board[0][2]) {
+            return PLAYER_1;
+        }
+        else if (game->board[2][0] == PLAYER_2 && game->board[2][0] == game->board[1][1] && game->board[1][1] == game->board[0][2]) {
+            return PLAYER_2;
+        }
+        return 0;
+    }
+
+    int a = game->k - 1;
+    int b = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    for (int i = 0; i < game->n - game->k + 1; i++) {
+        for (int j = 0; j < game->m - game->k + 1; j++) {
+            for (int l = 0; l < game->k; l++) {
+                if (game->board[a][b] == PLAYER_1) {
+                    counter1++;
+                    counter2 = 0;
+                }
+                else if (game->board[a][b] == PLAYER_2) {
+                    counter2++;
+                    counter1 = 0;
+                }
+                else {
+                    counter1 = 0;
+                    counter2 = 0;
+                }
+                if (counter1 == game->k) return PLAYER_1;
+                if (counter2 == game->k) return PLAYER_2;
+                a--;
+                b++;
+            }
+            counter1 = 0;
+            counter2 = 0;
+            for (int l = 0; l < game->k; l++) {
+                a++;
+                b--;
+            }
+            b++;
+        }
+        for (int j = 0; j < game->m - game->k + 1; j++) {
+            b--;
+        }
+        a++;
+    }
+
+    return 0;
+}
+
+int checkDescendingDiagonalWin(Game* game) {
+
+    if (game->n == 3 && game->m == 3 && game->k == 3) {
+
+        if (game->board[0][0] == PLAYER_1 && game->board[0][0] == game->board[1][1] && game->board[1][1] == game->board[2][2]) {
+            return PLAYER_1;
+        }
+        else if (game->board[0][0] == PLAYER_2 && game->board[0][0] == game->board[1][1] && game->board[1][1] == game->board[2][2]) {
+            return PLAYER_2;
+        }
+        return 0;
+    }
+
+    int a = 0;
+    int b = 0;
+    int counter1 = 0;
+    int counter2 = 0;
+    for (int i = 0; i < game->n - game->k + 1; i++) {
+        for (int j = 0; j < game->m - game->k + 1; j++) {
+            for (int l = 0; l < game->k; l++) {
+                if (game->board[a][b] == PLAYER_1) {
+                    counter1++;
+                    counter2 = 0;
+                }
+                else if (game->board[a][b] == PLAYER_2) {
+                    counter2++;
+                    counter1 = 0;
+                }
+                else {
+                    counter1 = 0;
+                    counter2 = 0;
+                }
+                if (counter1 == game->k) return PLAYER_1;
+                if (counter2 == game->k) return PLAYER_2;
+                a++;
+                b++;
+            }
+            counter1 = 0;
+            counter2 = 0;
+            for (int l = 0; l < game->k; l++) {
+                a--;
+                b--;
+            }
+            b++;
+        }
+        for (int j = 0; j < game->m - game->k + 1; j++) {
+            b--;
+        }
+        a++;
+    }
+
+    return 0;
+}
+
+
+int isGameOver(Game* game) {
+    int result;
+    result = checkHorizontalWin(game);
+    if (result) return result;
+    result = checkVerticalWin(game);
+    if (result) return result;
+    result = checkAscendingDiagonalWin(game);
+    if (result) return result;
+    result = checkDescendingDiagonalWin(game);
+    if (result) return result;
+    if (game->fieldsLeft == 0) return 3;
+
+    return 0;
+}
+
+void genAllPosMov(Game* game) {
+    if (game->fieldsLeft == 0) {
+        printf("0\n");
+    }
+    else {
+        if (ceil((game->n * game->m - game->fieldsLeft) / 2.0) < game->k) {
+            printf("%d", game->fieldsLeft);
+            printf("\n");
+            for (int i = 0; i < game->n; i++) {
+                for (int j = 0; j < game->m; j++) {
+                    if (game->board[i][j] == EMPTY_FIELD) {
+                        game->board[i][j] = game->activePlayer;
+                        printBoard(game);
+                        game->board[i][j] = EMPTY_FIELD;
+                    }
+                }
+            }
+            return;
+        }
+        if (!isGameOver(game)) {
+            printf("%d", game->fieldsLeft);
+            printf("\n");
+            for (int i = 0; i < game->n; i++) {
+                for (int j = 0; j < game->m; j++) {
+                    if (game->board[i][j] == EMPTY_FIELD) {
+                        game->board[i][j] = game->activePlayer;
+                        printBoard(game);
+                        game->board[i][j] = EMPTY_FIELD;
+                    }
+                }
+            }
+        }
+        else printf("0\n");
+    }
+}
+
+void deleteBoard(Game* game) {
+    for (int i = 0; i < game->n; i++) {
+        delete[] game->board[i];
+    }
+    delete[] game->board;
+}
+
+void genAllPosMovIfGameOver(Game* game) {
+    bool onlyOne = false;
+    if (!isGameOver(game)) {
+        for (int i = 0; i < game->n; i++) {
+            for (int j = 0; j < game->m; j++) {
+                if (game->board[i][j] == EMPTY_FIELD) {
+                    game->board[i][j] = game->activePlayer;
+                    if (isGameOver(game)){
+                        printf("1\n");
+                        printBoard(game);
+                        onlyOne = true;
+                        break;
+                    }
+                    else {
+                        game->board[i][j] = EMPTY_FIELD;
+                    }
+                }
+
+            }
+            if (onlyOne == true) break;
+        }
+      if(onlyOne == false)  genAllPosMov(game);
+    }
+    else printf("0\n");
+}
+int changePlayer(int player) {
+    if (player == PLAYER_1)
+        return PLAYER_2;
+    else
+        return PLAYER_1;
+}
+int verticalMinMax(Game* game) {
+    bool pl1wins = false;
+    bool pl2wins = false;
+    int k1 = 0;
+    int k2 = 0;
+    if (game->m == 4 && game->k == 3) { //k=3
+        for (int j = 0; j < game->n; j++) {
+            for (int i = 0; i < ceil(game->m / 2); i++) {
+                if (game->board[j][i] == game->board[j][i + 1] && game->board[j][i + 1] == game->board[j][i + 2] && game->board[j][i] == PLAYER_1)
+                    pl1wins = true;
+                if (game->board[j][i] == game->board[j][i + 1] && game->board[j][i + 1] == game->board[j][i + 2] && game->board[j][i] == PLAYER_2)
+                    pl2wins = true;
+            }
+            //    if (game->board[j][0] == game->board[j][1] == game->board[j][2] == PLAYER_1 || game->board[j][1] == game->board[j][2] == game->board[j][3] == PLAYER_1)
+            //    pl1wins = true;
+          //  if (game->board[j][0] == game->board[j][1] == game->board[j][2] == PLAYER_2 || game->board[j][1] == game->board[j][2] == game->board[j][3] == PLAYER_2)
+          //      pl2wins = true;
+        }
+    }
+    else if (game->m == 3 && game->k == 2) { //k=2
+        for (int j = 0; j < game->n; j++) {
+            for (int i = 0; i < ceil(game->m / 2); i++) {
+                if (game->board[j][i] == game->board[j][i + 1] && game->board[j][i + 1] == PLAYER_1)
+                    pl1wins = true;
+                if (game->board[j][i] == game->board[j][i + 1] && game->board[j][i + 1]  == PLAYER_2)
+                    pl2wins = true;
+            }
+          //  if ((game->board[j][0] == game->board[j][1] && game->board[j][1] == PLAYER_1) || (game->board[j][1] == game->board[j][2] && game->board[j][2]  == PLAYER_1))
+           //     pl1wins = true;
+         //   if ((game->board[j][0] == game->board[j][1] && game->board[j][1] == PLAYER_2) || (game->board[j][1] == game->board[j][2] && game->board[j][2] == PLAYER_2))
+          //      pl2wins = true;
+        }
+    }
+    else {
+        for (int j = 0; j < game->n; j++) {
+            k1 = 0;
+            k2 = 0;
+            for (int i = 0; i < game->m; i++) {
+                if (game->board[j][i] == PLAYER_1)
+                    k1++;
+                else if (game->board[j][i] == PLAYER_2)
+                    k2++;
+            }
+            if (game->k == k1 == k2) {
+                pl1wins = true;
+                pl2wins = true;
+                break;
+            }
+            else if (game->k == k1 && game->k != k2) {
+                pl1wins = true;
+            }
+            else if (game->k == k2 && game->k != k1) {
+                pl2wins = true;
+            }
+        }
+    }
+    if (pl1wins == true && pl2wins == true)
+        return REMIS;
+    else if (pl1wins == true && pl2wins == false)
+        return PLAYER_1;
+    else if (pl2wins == true && pl1wins == false)
+        return PLAYER_2;
+    else if (pl1wins == false && pl2wins == false)
+        return 0;
+
+    return 0;
+}
+
+int rightSlantMinMax(Game* game) {
+    bool pl1wins = false;
+    bool pl2wins = false;
+    int k1 = 0;
+    int k2 = 0;
+    if (game->n == game->m && game->m == 3 && game->k == 2) {
+
+        if(game->board[1][0] == game->board[2][1] && game->board[1][0] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[0][1] == game->board[1][2] && game->board[1][2] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[0][0] == game->board[1][1] && game->board[1][1] == PLAYER_1) 
+            pl1wins = true;
+        if(game->board[1][1] == game->board[2][2] && game->board[2][2] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[1][0] == game->board[2][1] && game->board[1][0] == PLAYER_2)
+            pl2wins = true;
+        if(game->board[0][1] == game->board[1][2] && game->board[1][2] == PLAYER_2)
+            pl2wins = true;
+        if(game->board[0][0] == game->board[1][1] && game->board[1][1] == PLAYER_2) 
+            pl2wins = true;
+        if(game->board[1][1] == game->board[2][2] && game->board[2][2] == PLAYER_2)
+            pl2wins = true;
+
+
+    }
+
+
+    else if (game->n == game->m && game->m == 4 && game->k == 3) {
+        if (game->board[1][0] == game->board[2][1] && game->board[2][1] == game->board[3][2] && game->board[3][2] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[0][1] == game->board[1][2] && game->board[1][2] == game->board[2][3] && game->board[2][3] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[0][0] == game->board[1][1] && game->board[1][1] == game->board[2][2] && game->board[2][2] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[1][1] == game->board[2][2] && game->board[2][2] == game->board[3][3] && game->board[3][3] == PLAYER_1)
+            pl1wins = true;
+        if (game->board[1][0] == game->board[2][1] && game->board[2][1] == game->board[3][2] && game->board[3][2] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[0][1] == game->board[1][2] && game->board[1][2] == game->board[2][3] && game->board[2][3] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[0][0] == game->board[1][1] && game->board[1][1] == game->board[2][2] && game->board[2][2] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[1][1] == game->board[2][2] && game->board[2][2] == game->board[3][3] && game->board[3][3] == PLAYER_2)
+            pl2wins = true;
+
+    }
+    else {
+        for (int j = 0; j < (game->m /2); j++) {
+            k1 = 0;
+            k2 = 0;
+            for (int i = 0; i < game->n; i++) {
+                if (game->board[i][j] == PLAYER_1)
+                    k1++;
+                else if (game->board[i][j] == PLAYER_2)
+                    k2++;
+                j++;
+            }
+            if (game->k == k1 == k2) {
+                pl1wins = true;
+                pl2wins = true;
+                break;
+            }
+            else if (game->k == k1 && game->k != k2) {
+                pl1wins = true;
+            }
+            else if (game->k == k2 && game->k != k1) {
+                pl2wins = true;
+            }
+        }
+    }
+    if (pl1wins == true && pl2wins == true)
+        return REMIS;
+    else if (pl1wins == true && pl2wins == false)
+        return PLAYER_1;
+    else if (pl2wins == true && pl1wins == false)
+        return PLAYER_2;
+    else if (pl1wins == false && pl2wins == false)
+        return 0;
+
+    return 0;
+}
+int leftSlantMinMax(Game* game) {
+    bool pl1wins = false;
+    bool pl2wins = false;
+    int k1 = 0;
+    int k2 = 0;
+    if (game->n == game->m && game->m == 3 && game->k == 2) {
+        if (game->board[0][1] == game->board[1][0] && game->board[1][0] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[1][2] == game->board[2][1] && game->board[2][1] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[0][2] == game->board[1][1] && game->board[1][1] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[1][1] == game->board[2][0] && game->board[2][0] == PLAYER_1)
+            pl1wins = true;
+        if (game->board[0][1] == game->board[1][0] && game->board[1][0] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[1][2] == game->board[2][1] && game->board[2][1] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[0][2] == game->board[1][1] && game->board[1][1] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[1][1] == game->board[2][0] && game->board[2][0] == PLAYER_2)
+            pl2wins = true;
+
+    }
+    else if (game->n == game->m && game->m == 4 && game->k == 3) {
+        if (game->board[0][2] == game->board[1][1] && game->board[1][1] == game->board[2][0] && game->board[2][0] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[0][3] == game->board[1][2] && game->board[1][2] == game->board[2][1] && game->board[2][1] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[1][2] == game->board[2][1] && game->board[2][1] == game->board[3][0] && game->board[3][0] == PLAYER_1)
+            pl1wins = true;
+        if(game->board[1][3] == game->board[2][2] && game->board[2][2] == game->board[1][3] && game->board[1][3] == PLAYER_1)
+            pl1wins = true;
+        if (game->board[0][2] == game->board[1][1] && game->board[1][1] == game->board[2][0] && game->board[2][0] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[0][3] == game->board[1][2] && game->board[1][2] == game->board[2][1] && game->board[2][1] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[1][2] == game->board[2][1] && game->board[2][1] == game->board[3][0] && game->board[3][0] == PLAYER_2)
+            pl2wins = true;
+        if (game->board[1][3] == game->board[2][2] && game->board[2][2] == game->board[1][3] && game->board[1][3] == PLAYER_2)
+            pl2wins = true;
+
+    }
+    else {
+        for (int j = (game->m / 2); j > 0; j--) {
+            k1 = 0;
+            k2 = 0;
+            for (int i = 0; i < game->n; i++) {
+                if (game->board[i][j] == PLAYER_1)
+                    k1++;
+                else if (game->board[i][j] == PLAYER_2)
+                    k2++;
+                j--;
+            }
+            if (game->k == k1 == k2) {
+                pl1wins = true;
+                pl2wins = true;
+                break;
+            }
+            else if (game->k == k1 && game->k != k2) {
+                pl1wins = true;
+            }
+            else if (game->k == k2 && game->k != k1) {
+                pl2wins = true;
+            }
+        }
+    }
+    if (pl1wins == true && pl2wins == true)
+        return REMIS;
+    else if (pl1wins == true && pl2wins == false)
+        return PLAYER_1;
+    else if (pl2wins == true && pl1wins == false)
+        return PLAYER_2;
+    else if (pl1wins == false && pl2wins == false)
+        return 0;
+
+    return 0;
+}
+
+
+int evaluate(Game* game) {
+    int result;
+    result = horizontalMinMax(game);
+    if (result) return result;
+    result = verticalMinMax(game);
+    if (result) return result;
+    result = rightSlantMinMax(game);
+    if (result) return result;
+    result = leftSlantMinMax(game);
+    if (result) return result;
+
+    return 0;
+}
+
+int minimax(Game* game, int depth, bool isMax, int player)
+{
+    int score = evaluate(game); //score = 1 pl1 score = 2 pl2
+    if (player == PLAYER_1 && score == PLAYER_1)
+        score = 10;
+    if (player == PLAYER_2 && score == PLAYER_2)
+        score = 10;
+    if (player == PLAYER_1 && score == PLAYER_2)
+        score = -10;
+    if (player == PLAYER_2 && score == PLAYER_1)
+        score = -10;
+
+    // If Maximizer has won the game return his/her
+    // evaluated score
+    if (score == 10)
+        return score;
+
+    // If Minimizer has won the game return his/her
+    // evaluated score
+    if (score == -10)
+        return score;
+
+    // If there are no more moves and no winner then
+    // it is a tie
+    if (game->fieldsLeft == 0)
+        return 0;
+
+    // If this maximizer's move
+    if (isMax)
+    {
+        int best = -1000;
+
+        // Traverse all cells
+        for (int i = 0; i < game->n; i++)
+        {
+            for (int j = 0; j < game->m; j++)
+            {
+                // Check if cell is empty
+                if (game->board[i][j] == EMPTY_FIELD)
+                {
+                    // Make the move
+                    game->board[i][j] = player;
+
+                    // Call minimax recursively and choose
+                    // the maximum value
+                    int resultMax = minimax(game, depth + 1, !isMax, player);
+                    if (resultMax > best)
+                        best = resultMax;
+                //    best = max(best,
+                    //    minimax(board, depth + 1, !isMax));
+
+                    // Undo the move
+                    game->board[i][j] = EMPTY_FIELD;
+                }
+            }
+        }
+        return best;
+    }
+
+    // If this minimizer's move
+    else
+    {
+        int best = 1000;
+
+        // Traverse all cells
+        for (int i = 0; i < game->n; i++)
+        {
+            for (int j = 0; j < game->m; j++)
+            {
+                // Check if cell is empty
+                if (game->board[i][j] == EMPTY_FIELD)
+                {
+                    // Make the move
+                    int opponent = changePlayer(player);
+                    game->board[i][j] = opponent;
+
+                    // Call minimax recursively and choose
+                    // the minimum value
+                    int resultMin = minimax(game, depth + 1, !isMax, player);
+                    if (resultMin < best)
+                        best = resultMin;
+                 //   best = min(best,
+                   //     minimax(board, depth + 1, !isMax));
+
+                    // Undo the move
+                    game->board[i][j] = EMPTY_FIELD;
+                }
+            }
+        }
+        return best;
+    }
+}
+
+void solveGameState(Game* game) {
+    int player = game->activePlayer;
+    Move bestMove;
+    while (true)
+    {
+        if (isGameOver(game))
+        {
+            if (isGameOver(game) == PLAYER_1)
+                printf("FIRST_PLAYER_WINS\n");
+            if (isGameOver(game) == PLAYER_2)
+                printf("SECOND_PLAYER_WINS\n");
+            if(isGameOver(game) == REMIS)
+                printf("REMIS\n");
+            break;
+        }
+        else
+        {
+            int bestVal = -1000;          
+            bestMove.row = -1;
+            bestMove.col = -1;
+            for (int i = 0; i < game->n; i++)
+            {
+                for (int j = 0; j < game->m; j++)
+                {
+                    // Check if cell is empty
+                    if (game->board[i][j] == EMPTY_FIELD)
+                    {
+                        // Make the move
+                        game->board[i][j] = player;
+
+                        // compute evaluation function for this
+                        // move.
+                        int moveVal = minimax(game, 0, false, player);
+
+                        // Undo the move
+                        game->board[i][j] = EMPTY_FIELD;
+
+                        // If the value of the current move is
+                        // more than the best value, then update
+                        // best/
+                        if (moveVal > bestVal)
+                        {
+                            bestMove.row = i;
+                            bestMove.col = j;
+                            bestVal = moveVal;
+                        }
+                    }
+                }
+            }
+        }
+        game->board[bestMove.row][bestMove.col] = player;
+        player = changePlayer(player);
+    }
+}
+
+
+int main()
+{
+    Game game;
+    char command[COMMAND_SIZE];
+    while (true) {
+        scanf("%s", command);
+        if (feof(stdin) != 0) {
+            break;
+        }
+        else if (!strcmp(command, "GEN_ALL_POS_MOV")) {
+            makeTable(&game);
+            genAllPosMov(&game);
+            deleteBoard(&game);
+        }
+        else if (!strcmp(command, "GEN_ALL_POS_MOV_CUT_IF_GAME_OVER")) {
+            makeTable(&game);
+            genAllPosMovIfGameOver(&game);
+            deleteBoard(&game);
+        }
+        else if (!strcmp(command, "SOLVE_GAME_STATE")) {
+            makeTable(&game);
+            solveGameState(&game);
+            deleteBoard(&game);
+        } 
+    }
+    return 0;
+}
